@@ -1,5 +1,5 @@
 ﻿
-namespace OthelloAI
+namespace OthelloIAG11
 {
     public enum LegalDirection
     {

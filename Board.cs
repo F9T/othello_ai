@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 
-namespace OthelloAI
+namespace OthelloIAG11
 {
     [Serializable]
     public class Board : IPlayable.IPlayable
@@ -51,7 +48,7 @@ namespace OthelloAI
 
         public string GetName()
         {
-            return "Ombang_Lovis";
+            return "G11_Ombang_Lovis";
         }
 
         public bool IsPlayable(int _column, int _line, bool _isWhite)

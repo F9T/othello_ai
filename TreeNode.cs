@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OthelloAI
+namespace OthelloIAG11
 {
     public class TreeNode
     {
-        private const double WeightMobility = 90,
-                            WeightFrontier = 80,
-                            WeightNumberDisc = 15,
-                            WeightCorner = 800,
-                            WeightScore = 15,
-                            WeightBadPostion = 390;
+        private const double WeightMobility = 78.922,
+                            WeightFrontier = 74.396,
+                            WeightNumberDisc = 10.0,
+                            WeightCorner = 801.724,
+                            WeightScore = 10.0,
+                            WeightBadPostion = 382.026;
 
         private List<Tuple<int, int, List<Tuple<int, int>>>> cornersAndCloseCornerPosition;
 
@@ -34,14 +34,14 @@ namespace OthelloAI
         {
             boardScore = new[,]
             {
-                {40, -10, 15, 10, 10, 15, -10, 40},
-                {-10, -20, -5, 0, 0, -5, -20, -10},
-                {15, -5, 3, 3, 3, 3, -5, 15},
-                {10, 0, 3, 10, 10, 3, 0, 10},
-                {10, 0, 3, 10, 10, 3, 0, 10},
-                {15, -5, 3, 3, 3, 3, -5, 15},
-                {-10, -20, -5, 0, 0, -5, -20, -10},
-                {40, -10, 15, 10, 10, 15, -10, 40}
+                {20, -3, 11, 8, 8, 11, -3, 20},
+                {-3, -7, -4, 1, 1, -4, -7, -3},
+                {11, -4, 2, 2, 2, 2, -4, 11},
+                {8, 1, 2, -3, -3, 2, 1, 8},
+                {8, 1, 2, -3, -3, 2, 1, 8},
+                {11, -4, 2, 2, 2, 2, -4, 11},
+                {-3, -7, -4, 1, 1, -4, -7, -3},
+                {20, -3, 11, 8, 8, 11, -3, 20}
             };
             cornersAndCloseCornerPosition = new List<Tuple<int, int, List<Tuple<int, int>>>>
             {
@@ -80,16 +80,16 @@ namespace OthelloAI
             {
                 for (int j = 0; j < tmpBoard.GetLength(1); j++)
                 {
-                    if (tmpBoard[i, j] == (int) _tileState)
+                    if (tmpBoard[j, i] == (int) _tileState)
                     {
-                        count += CountFrontierDisk(i, j);
+                        count += CountFrontierDisk(j, i);
                     }
                 }
             }
             return count;
         }
 
-        private int CountFrontierDisk(int _line, int _column)
+        private int CountFrontierDisk(int _column, int _line)
         {
             for (int i = -1; i <= 1; i++)
             {
@@ -99,7 +99,7 @@ namespace OthelloAI
                     int c = _column + j;
                     if (l >= 0 && c >= 0 && l < Board.NumberCase && c < Board.NumberCase && (l != _line || c != _column))
                     {
-                        if (Board.GetBoard()[l, c] == (int)TileState.Empty)
+                        if (Board.GetBoard()[c, l] == (int)TileState.Empty)
                         {
                             return 1;
                         }
@@ -115,15 +115,9 @@ namespace OthelloAI
             var board = Board.GetBoard();
             foreach (var corner in cornersAndCloseCornerPosition)
             {
-                if (board[corner.Item1, corner.Item2] == (int) TileState)
+                if (board[corner.Item1, corner.Item2] == (int)_tileState)
                 {
-                    foreach (var closeCorner in corner.Item3)
-                    {
-                        if (board[closeCorner.Item1, closeCorner.Item2] == (int) TileState)
-                        {
-                            count++;
-                        }
-                    }
+                    count += corner.Item3.Count(_closeCorner => board[_closeCorner.Item1, _closeCorner.Item2] == (int) _tileState);
                 }
             }
             return count;
@@ -142,9 +136,9 @@ namespace OthelloAI
             {
                 for (int j = 0; j < boardScore.GetLength(1); j++)
                 {
-                    if (board[i, j] == (int) _tileState)
+                    if (board[j, i] == (int) _tileState)
                     {
-                        score += boardScore[i, j];
+                        score += boardScore[j, i];
                     }
                 }
             }
@@ -171,48 +165,45 @@ namespace OthelloAI
             int myNumberDisc = TileState == TileState.White ? Board.GetWhiteScore() : Board.GetBlackScore();
             int enemyNumerDisc = enemyTileState == TileState.White ? Board.GetWhiteScore() : Board.GetBlackScore();
             double discValue = 0.0;
-            if (myNumberDisc + enemyNumerDisc != 0) //Check division by zero
+            if (myNumberDisc > enemyNumerDisc)
             {
                 discValue = (100.0 * myNumberDisc) / (myNumberDisc + enemyNumerDisc);
-                //Negative
-                if (myNumberDisc < enemyNumerDisc)
-                {
-                    discValue *= -1;
-                }
+            }
+            else if (myNumberDisc < enemyNumerDisc)
+            {
+                discValue = -(100.0 * enemyNumerDisc) / (myNumberDisc + enemyNumerDisc);
             }
 
             //Frontier
             int myFrontierDisc = CountFrontier(TileState);
             int enemyFrontierDisc = CountFrontier(enemyTileState);
             double frontierValue = 0.0;
-            if (myFrontierDisc + enemyFrontierDisc != 0) //Check division by zero
+            if (myFrontierDisc > enemyFrontierDisc)
             {
-                frontierValue = (100.0 * myFrontierDisc) / (myFrontierDisc + enemyFrontierDisc);
-                //Negative if enemy has less frontier disc
-                if (myFrontierDisc > enemyFrontierDisc)
-                {
-                    frontierValue *= -1;
-                }
+                frontierValue = -(100.0 * myFrontierDisc) / (myFrontierDisc + enemyFrontierDisc);
+            }
+            else if (myFrontierDisc < enemyFrontierDisc)
+            {
+                frontierValue = (100.0 * enemyFrontierDisc) / (myFrontierDisc + enemyFrontierDisc);
             }
 
             //Mobility
             int myMobility = GetPossibleMove(TileState == TileState.White).Count;
             int enemyMobility = GetPossibleMove(enemyTileState == TileState.White).Count;
             double mobilityValue = 0.0;
-            if (myMobility + enemyMobility != 0) //Check division by zero
+            if (myMobility > enemyMobility)
             {
                 mobilityValue = (100.0 * myMobility) / (myMobility + enemyMobility);
-                //Negative
-                if (myMobility < enemyMobility)
-                {
-                    mobilityValue *= -1;
-                }
+            }
+            else if (myMobility < enemyMobility)
+            {
+                mobilityValue = -(100.0 * enemyMobility) / (myMobility + enemyMobility);
             }
 
             //Corner 
             int myNumberCorner = CountCorners(TileState);
             int enemyNumberCorner = CountCorners(enemyTileState);
-            double cornerValue = myNumberCorner - enemyNumberCorner;
+            double cornerValue = 25 * (myNumberCorner - enemyNumberCorner);
 
             //Close corner
             int myNumberCloseCornerPosition = CountBadCornerPosition(TileState);
