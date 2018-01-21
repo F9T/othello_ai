@@ -157,7 +157,70 @@ namespace OthelloAI
             {
                 return 0;
             }
-			return 0.0;
+            var enemyTileState = TileState.White;
+            if (TileState == TileState.White)
+            {
+                enemyTileState = TileState.Black;
+            }
+            //Calculate score
+            int myScore = Score(TileState);
+            int enemyScore = Score(enemyTileState);
+            int scoreValue = myScore - enemyScore;
+
+            //Count disc
+            int myNumberDisc = TileState == TileState.White ? Board.GetWhiteScore() : Board.GetBlackScore();
+            int enemyNumerDisc = enemyTileState == TileState.White ? Board.GetWhiteScore() : Board.GetBlackScore();
+            double discValue = 0.0;
+            if (myNumberDisc + enemyNumerDisc != 0) //Check division by zero
+            {
+                discValue = (100.0 * myNumberDisc) / (myNumberDisc + enemyNumerDisc);
+                //Negative
+                if (myNumberDisc < enemyNumerDisc)
+                {
+                    discValue *= -1;
+                }
+            }
+
+            //Frontier
+            int myFrontierDisc = CountFrontier(TileState);
+            int enemyFrontierDisc = CountFrontier(enemyTileState);
+            double frontierValue = 0.0;
+            if (myFrontierDisc + enemyFrontierDisc != 0) //Check division by zero
+            {
+                frontierValue = (100.0 * myFrontierDisc) / (myFrontierDisc + enemyFrontierDisc);
+                //Negative if enemy has less frontier disc
+                if (myFrontierDisc > enemyFrontierDisc)
+                {
+                    frontierValue *= -1;
+                }
+            }
+
+            //Mobility
+            int myMobility = GetPossibleMove(TileState == TileState.White).Count;
+            int enemyMobility = GetPossibleMove(enemyTileState == TileState.White).Count;
+            double mobilityValue = 0.0;
+            if (myMobility + enemyMobility != 0) //Check division by zero
+            {
+                mobilityValue = (100.0 * myMobility) / (myMobility + enemyMobility);
+                //Negative
+                if (myMobility < enemyMobility)
+                {
+                    mobilityValue *= -1;
+                }
+            }
+
+            //Corner 
+            int myNumberCorner = CountCorners(TileState);
+            int enemyNumberCorner = CountCorners(enemyTileState);
+            double cornerValue = myNumberCorner - enemyNumberCorner;
+
+            //Close corner
+            int myNumberCloseCornerPosition = CountBadCornerPosition(TileState);
+            int enemyNumberCloseCornerPosition = CountBadCornerPosition(enemyTileState);
+            double closeCornerValue = -12.5 * (myNumberCloseCornerPosition - enemyNumberCloseCornerPosition);
+
+            return (WeightFrontier * frontierValue) + (WeightMobility * mobilityValue) + (WeightBadPostion * closeCornerValue) +
+                   (WeightNumberDisc * discValue) + (WeightScore * scoreValue) + (WeightCorner * cornerValue);
         }
 
         public bool IsFinal()
